@@ -6,6 +6,12 @@ branding:
   icon: 'package'
   color: 'blue'
 
+inputs:
+  project_path:
+    description: 'Path to the directory containing pyproject.toml'
+    required: false
+    default: '.'
+
 runs:
   using: 'composite'
   steps:
@@ -22,22 +28,27 @@ runs:
       shell: bash
       run: |
         python -c "
-          from toml import load, dump
-          from os import environ
-          
-          with open('pyproject.toml', 'r') as f:
-              data = load(f)
+        import os
+        from toml import load, dump
+        
+        path = os.path.join('${{ inputs.project_path }}', 'pyproject.toml')
+        
+        with open(path, 'r') as f:
+            data = load(f)
 
-          v = int(data['project']['version'].strip('v'))
-          v = 'v{}'.format(v+1)
+        # Strip non-numeric text and handle standard semantic versions (e.g., 1.0.0 -> 1.0.1)
+        version_str = data['project']['version'].lstrip('v')
+        parts = version_str.split('.')
+        parts[-1] = str(int(parts[-1]) + 1)
+        v = '.'.join(parts)
 
-          data['project']['version'] = v
-          
-          with open('pyproject.toml', 'w') as f:
-              dump(data, f)
+        data['project']['version'] = v
+        
+        with open(path, 'w') as f:
+            dump(data, f)
 
-          with open(environ['GITHUB_ENV'], 'a') as f:
-              f.write(f'v={v}\n')
+        with open(os.environ['GITHUB_ENV'], 'a') as f:
+            f.write(f'v={v}\n')
         "
 
     - name: Commit and push updated pyproject.toml
@@ -45,21 +56,25 @@ runs:
       run: |
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
-        git add pyproject.toml
-        git commit -m "chore: bump version to ${{ env.v }} [skip ci]"
+        git add "${{ inputs.project_path }}/pyproject.toml"
+        git commit -m "chore: bump version to v${{ env.v }} [skip ci]"
         git push
 
     - name: Build distribution packages
       shell: bash
-      run: python -m build
+      run: |
+        cd ${{ inputs.project_path }}
+        python -m build
 
     - name: Create Release
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: ${{ env.v }}
-        name: ${{ env.v }}
+        tag_name: v${{ env.v }}
+        name: v${{ env.v }}
         body: Increment Version
-        files: dist/* 
+        files: ${{ inputs.project_path }}/dist/* 
 
     - name: Publish distribution to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        packages-dir: ${{ inputs.project_path }}/dist/

@@ -26,7 +26,7 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - uses: MineFartS/PyPi-Increment-Publish@v2
+      - uses: MineFartS/PyPi-Increment-Publish@v3
 ```
 
 ---

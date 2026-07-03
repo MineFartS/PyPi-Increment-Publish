@@ -73,7 +73,5 @@ runs:
         body: Increment Version
         files: ${{ inputs.project_path }}/dist/* 
 
-    - name: Publish distribution to PyPI
-      uses: pypa/gh-action-pypi-publish@v1.12.4
-      with:
-        packages-dir: ${{ inputs.project_path }}/dist/
+    - uses: pypa/gh-action-pypi-publish@release/v1
+

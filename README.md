@@ -8,6 +8,28 @@ To use this action successfully, ensure your target repository meets these crite
 2. **PyPI Trusted Publishing**: Your PyPI project must be configured to accept trusted publishing from your GitHub organization and repository name.
 
 ---
+### Setup
+Copy this workflow into your repository at `.github/workflows/publish.yml`:
+
+```yaml
+name: Publish to PyPI
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: MineFartS/PyPi-Increment-Publish@v2
+```
+
+---
 ## Usage
 This action is configured to run on demand via the workflow_dispatch event. This gives you full control over exactly when a new release is published.
 

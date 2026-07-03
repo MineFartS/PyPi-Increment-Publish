@@ -22,7 +22,7 @@ runs:
 
     - name: Install Pip Packages
       shell: bash
-      run: python -m pip install pip build toml twine
+      run: python -m pip install pip build toml
 
     - name: Update version in pyproject.toml
       shell: bash
@@ -36,7 +36,6 @@ runs:
         with open(path, 'r') as f:
             data = load(f)
 
-        # Strip non-numeric text and handle standard semantic versions (e.g., 1.0.0 -> 1.0.1)
         version_str = data['project']['version'].lstrip('v')
         parts = version_str.split('.')
         parts[-1] = str(int(parts[-1]) + 1)
@@ -75,5 +74,6 @@ runs:
         files: ${{ inputs.project_path }}/dist/* 
 
     - name: Publish distribution to PyPI
-      shell: bash
-      run: python -m twine upload ${{ inputs.project_path }}/dist/*
+      uses: pypa/gh-action-pypi-publish@v1.12.4
+      with:
+        packages-dir: ${{ inputs.project_path }}/dist/
